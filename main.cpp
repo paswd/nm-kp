@@ -1,10 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 
 using namespace std;
 
 typedef long double TNum;
+
+const TNum STEP_ORIG = .01;
 
 class Solution {
 public:
@@ -63,9 +66,20 @@ int main(int argc, char* argv[]) {
 
 	Volterra_II_Solve(a, b, n, h, res);
 
+	ofstream outNumeral("plot-numeral.dat");
+	ofstream outOriginal("plot-original.dat");
+
 	for (size_t i = 0; i < res.size(); i++) {
-		cout << res[i].X << " " << res[i].Y << " " << yCorrect(res[i].X) << endl;
+		//cout << res[i].X << " " << res[i].Y << " " << yCorrect(res[i].X) << endl;
+		outNumeral << res[i].X << " " << res[i].Y << endl;
 	}
+	outNumeral.close();
+
+	for (TNum curr = a; curr <= b; curr += STEP_ORIG) {
+		outOriginal << curr << " " << yCorrect(curr) << endl;
+	}
+
+	outOriginal.close();
 
 	return 0;
 }
