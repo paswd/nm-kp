@@ -69,9 +69,15 @@ int main(int argc, char* argv[]) {
 	ofstream outNumeral("plot-numeral.dat");
 	ofstream outOriginal("plot-original.dat");
 
+	double maxDiff = 0.;
+
 	for (size_t i = 0; i < res.size(); i++) {
 		//cout << res[i].X << " " << res[i].Y << " " << yCorrect(res[i].X) << endl;
 		outNumeral << res[i].X << " " << res[i].Y << endl;
+		double currDiff = abs(res[i].Y - yCorrect(res[i].X));
+		if (currDiff > maxDiff) {
+			maxDiff = currDiff;
+		}
 	}
 	outNumeral.close();
 
@@ -80,6 +86,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	outOriginal.close();
+
+	cout << "Шаг: " << h << endl;
+	cout << "Погрешность: " << maxDiff << endl;
 
 	return 0;
 }
