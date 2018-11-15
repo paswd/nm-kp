@@ -1,11 +1,29 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
+#include <string>
 #include <cmath>
 
 using namespace std;
 
 typedef long double TNum;
+
+bool isNum(string str) {
+	for (size_t i = 0; i < str.size(); i++) {
+		if (str[i] < '0' || str[i] > '9') {
+			return false;
+		}
+	}
+	return true;
+}
+
+size_t strToNum(string str) {
+	istringstream ss(str);
+	size_t res;
+	ss >> res;
+	return res;
+}
 
 const TNum STEP_ORIG = .01;
 
@@ -55,40 +73,72 @@ int main(int argc, char* argv[]) {
 		cout << "# ERROR: Required data is not set" << endl;
 		return 1;
 	}
+	bool isPlotEps = false;
 	vector <Solution> res;
-	//TNum a, b, h;
-	//size_t n;
-	//cin >> a >> b >> n;
 	TNum a = (TNum) atof(argv[1]);
 	TNum b = (TNum) atof(argv[2]);
-	size_t n = (size_t) atoi(argv[3]);
+	size_t n = 1;
+	string argv3(argv[3]);
+	if (argv3 == "eps") {
+		isPlotEps = true;
+	} else if (isNum(argv3)) {
+		n = strToNum(argv3);
+	}
 	TNum h;
 
-	Volterra_II_Solve(a, b, n, h, res);
+	ofstream outNumeral;
+	ofstream outOriginal;
+	ofstream outEps;
 
-	ofstream outNumeral("plot-numeral.dat");
-	ofstream outOriginal("plot-original.dat");
+	size_t start;
+	size_t end;
 
-	double maxDiff = 0.;
+	if (isPlotEps) {
+		outEps.open("plot-eps.dat");
+		if (argc < 5) {
+			cout << "# ERROR: Required data is not set" << endl;
+			return 1;
+		}
+		start = 2;
+		end = (size_t) atoi(argv[4]);
+	} else {
+		outNumeral.open("plot-numeral.dat");
+		outOriginal.open("plot-original.dat");
+		start = n;
+		end = n;
+	}
 
-	for (size_t i = 0; i < res.size(); i++) {
-		//cout << res[i].X << " " << res[i].Y << " " << yCorrect(res[i].X) << endl;
-		outNumeral << res[i].X << " " << res[i].Y << endl;
-		double currDiff = abs(res[i].Y - yCorrect(res[i].X));
-		if (currDiff > maxDiff) {
-			maxDiff = currDiff;
+	for (size_t nCurr = start; nCurr <= end; nCurr++) {
+		Volterra_II_Solve(a, b, nCurr, h, res);
+
+		double maxDiff = 0.;
+		for (size_t i = 0; i < res.size(); i++) {
+			if (!isPlotEps) {
+				outNumeral << res[i].X << " " << res[i].Y << endl;
+			}
+			double currDiff = abs(res[i].Y - yCorrect(res[i].X));
+			if (currDiff > maxDiff) {
+				maxDiff = currDiff;
+			}
+		}
+		if (isPlotEps) {
+			outEps << nCurr << " " << maxDiff << endl;
+		} else {
+			for (TNum curr = a; curr <= b; curr += STEP_ORIG) {
+				outOriginal << curr << " " << yCorrect(curr) << endl;
+			}
+
+		
+			cout << "Шаг: " << h << endl;
+			cout << "Погрешность: " << maxDiff << endl;
 		}
 	}
-	outNumeral.close();
-
-	for (TNum curr = a; curr <= b; curr += STEP_ORIG) {
-		outOriginal << curr << " " << yCorrect(curr) << endl;
+	if (isPlotEps) {
+		outEps.close();
+	} else {
+		outNumeral.close();
+		outOriginal.close();
 	}
-
-	outOriginal.close();
-
-	cout << "Шаг: " << h << endl;
-	cout << "Погрешность: " << maxDiff << endl;
 
 	return 0;
 }
